@@ -1,6 +1,8 @@
 import boto3
 import os
+import csv
 
+output_file = 'unencrypted_s3_objects.csv'
 
 credentials = os.path.expanduser('.aws/credentials')
 config = os.path.expanduser('.aws/config')
@@ -13,7 +15,14 @@ if os.path.isfile(config):
 boto3.setup_default_session()
 s3 = boto3.resource('s3')
 
-for bucket in s3.buckets.all():
-    for object in bucket.objects.all():
-        key = s3.Object(bucket.name, object.key)
-        print('{} : {} : {}'.format(bucket.name, object.key, key.server_side_encryption))
+with open(output_file, 'w', newline='') as outfile:
+    out_file = csv.writer(outfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL)
+    out_file.writerow(['Bucket'] + ['Object'] + ['Encryption'])
+
+    # iterate over all objects in all buckets
+    for bucket in s3.buckets.all():
+        for object in bucket.objects.all():
+            key = s3.Object(bucket.name, object.key)
+            print('{} : {} : {}'.format(bucket.name, object.key, key.server_side_encryption))
+            if key.server_side_encryption is None:
+                out_file.writerow([bucket.name] + [object.key] + ['None'])
