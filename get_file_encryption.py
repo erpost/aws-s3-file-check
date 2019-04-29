@@ -30,3 +30,4 @@ with open(output_file, 'w', newline='') as outfile:
 
             except Exception as e:
                 print('{} : {} : {}'.format(bucket.name, object.key, e))
+                out_file.writerow([bucket.name] + [object.key] + [e])
