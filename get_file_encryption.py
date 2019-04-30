@@ -3,6 +3,7 @@ import os
 import csv
 
 output_file = 'unencrypted_s3_objects.csv'
+bucket_list = []
 
 credentials = os.path.expanduser('.aws/credentials')
 config = os.path.expanduser('.aws/config')
@@ -21,13 +22,14 @@ with open(output_file, 'w', newline='') as outfile:
 
     # iterate over all objects in all buckets
     for bucket in s3.buckets.all():
-        for object in bucket.objects.all():
-            try:
-                key = s3.Object(bucket.name, object.key)
-                print('{} : {} : {}'.format(bucket.name, object.key, key.server_side_encryption))
-                if key.server_side_encryption is None:
-                    out_file.writerow([bucket.name] + [object.key] + ['None'])
+        if bucket.name in bucket_list:
+            for object in bucket.objects.all():
+                try:
+                    key = s3.Object(bucket.name, object.key)
+                    print('{} : {} : {}'.format(bucket.name, object.key, key.server_side_encryption))
+                    if key.server_side_encryption is None:
+                        out_file.writerow([bucket.name] + [object.key] + ['None'])
 
-            except Exception as e:
-                print('{} : {} : {}'.format(bucket.name, object.key, e))
-                out_file.writerow([bucket.name] + [object.key] + [e])
+                except Exception as e:
+                    print('{} : {} : {}'.format(bucket.name, object.key, e))
+                    out_file.writerow([bucket.name] + [object.key] + [e])
